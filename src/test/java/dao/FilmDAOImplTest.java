@@ -3,7 +3,6 @@ package dao;
 import dto.FilmDTO;
 import exceptions.FilmNotFoundException;
 import models.*;
-import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.junit.jupiter.api.AfterEach;
@@ -22,7 +21,7 @@ class FilmDAOImplTest {
 
     @BeforeEach
     public void setUp() {
-        session = HibernateUtil.getSessionFactory().getCurrentSession();
+        session = HibernateUtil.getSessionFactory().openSession();
         transaction = session.beginTransaction();
         filmDAO = new FilmDAOImpl();
     }
@@ -55,6 +54,8 @@ class FilmDAOImplTest {
         Film film1 = filmList.get(0);
 
         Assertions.assertEquals(film.getTitle(), film1.getTitle());
+        Assertions.assertEquals(1, filmList.size());
+
     }
 
     @Test
@@ -79,56 +80,48 @@ class FilmDAOImplTest {
         Film filmById = filmDAO.getById(1);
 
         Assertions.assertEquals(film.getTitle(), filmById.getTitle());
-        System.out.println(film);
     }
 
 
-//    @Test//todo
-//    public void should_create_newFilm() {
-//        Actor actor = new Actor();
-//        actor.setName("Actor");
-//        session.persist(actor);
-//
-//        CarCinema carCinema = new CarCinema();
-//        carCinema.setName("CarCinema");
-//        carCinema.setCapacityOfCars(30);
-//        session.persist(carCinema);
-//
-//        FilmDTO filmDTO = new FilmDTO();
-//        filmDTO.setTitle("Film-1");
-//        filmDTO.setCinemaId(carCinema.getId());
-//
-//        session.merge(filmDTO);
-//        session.getTransaction().commit();
-//
-//        Film newFilm = filmDAO.create(filmDTO);
-//
-//        Assertions.assertEquals("Film-1", newFilm.getTitle());
-//        System.out.println(newFilm);
-//    }
-//
-//    @Test//todo
-//    void should_update_film() {
-//        Actor actor = new Actor();
-//        actor.setName("Actor");
-//        session.persist(actor);
-//
-//        ClassicCinema classicCinema = new ClassicCinema();
-//        classicCinema.setName("ClassicCinema");
-//        classicCinema.setNumberOfHalls(10);
-//        session.persist(classicCinema);
-//
-//        FilmDTO film = new FilmDTO();
-//        film.setId(1);
-//        film.setTitle("Film-1");
-//        film.setCinemaId(classicCinema.getId());
-//        session.persist(film);
-//
-//        session.getTransaction().commit();
-//
-//        Film updatedFilm = filmDAO.update(film);
-//        Assertions.assertEquals(film, updatedFilm);
-//    }
+    @Test
+    public void should_create_newFilm() {
+        CarCinema carCinema = new CarCinema();
+        carCinema.setName("CarCinema");
+        carCinema.setCapacityOfCars(30);
+        session.persist(carCinema);
+
+        FilmDTO filmDTO = new FilmDTO();
+        filmDTO.setTitle("Film-1");
+        filmDTO.setCinemaId(carCinema.getId());
+
+        session.getTransaction().commit();
+
+        Film newFilm = filmDAO.create(filmDTO);
+        Assertions.assertEquals("Film-1", newFilm.getTitle());
+    }
+
+    @Test
+    void should_update_film() {
+        ClassicCinema classicCinema = new ClassicCinema();
+        classicCinema.setName("ClassicCinema");
+        classicCinema.setNumberOfHalls(10);
+        session.persist(classicCinema);
+
+        Film newFilm = new Film();
+        newFilm.setTitle("Film");
+        newFilm.setCinema(classicCinema);
+        session.persist(newFilm);
+
+        FilmDTO filmDTO = new FilmDTO();
+        filmDTO.setId(newFilm.getId());
+        filmDTO.setTitle("Film-1");
+        filmDTO.setCinemaId(classicCinema.getId());
+
+        session.getTransaction().commit();
+
+        Film updatedFilm = filmDAO.update(filmDTO);
+        Assertions.assertEquals("Film-1", updatedFilm.getTitle());
+    }
 
     @Test
     void should_delete_filmById() {
@@ -136,12 +129,10 @@ class FilmDAOImplTest {
         actor.setName("Actor");
         session.persist(actor);
 
-
         CarCinema carCinema = new CarCinema();
         carCinema.setName("CarCinema");
         carCinema.setCapacityOfCars(30);
         session.persist(carCinema);
-
 
         Film film = new Film();
         film.setTitle("Film-1");
@@ -154,4 +145,5 @@ class FilmDAOImplTest {
         filmDAO.delete(1);
         Assertions.assertThrows(FilmNotFoundException.class, ()->filmDAO.getById(1));
     }
+
 }

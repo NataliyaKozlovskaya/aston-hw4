@@ -77,16 +77,15 @@ public class FilmDAOImpl implements FilmDAO {
 
             Integer cinemaId = updatedFilm.getCinemaId();
             Cinema cinema = session.get(Cinema.class, cinemaId);
+            Film filmFromDB = session.get(Film.class, updatedFilm.getId());
 
-            Film film = new Film();
-            film.setCinema(cinema);
-            film.setId(updatedFilm.getId());
-            film.setTitle(updatedFilm.getTitle());
+            filmFromDB.setCinema(cinema);
+            filmFromDB.setTitle(updatedFilm.getTitle());
 
-            session.update(film);
+            session.persist(filmFromDB);
 
             session.getTransaction().commit();
-            return film;
+            return filmFromDB;
         }
     }
 
